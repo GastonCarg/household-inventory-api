@@ -1,9 +1,11 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { LocationsService } from 'src/locations/locations.service';
 import { Repository } from 'typeorm';
 import { AddItemDto } from './products.dto';
 import { Item } from './products.entity';
@@ -13,6 +15,7 @@ export class ProductsService {
   constructor(
     @InjectRepository(Item)
     private productRepository: Repository<Item>,
+    private readonly locationsService: LocationsService,
   ) {}
 
   async getItems(): Promise<Item[]> {
@@ -25,34 +28,36 @@ export class ProductsService {
   async addItem(addItemBody: AddItemDto): Promise<Item> {
     const { title, expireDate, quantity, location } = addItemBody;
 
-    if (!title || !expireDate || !quantity || !location)
-      throw new BadRequestException('Missing body parameters');
+    if (!title || !expireDate || !quantity || !location) throw new BadRequestException();
 
     const response = this.productRepository.create(addItemBody);
+
+    if (!response) throw new InternalServerErrorException();
     return this.productRepository.save(response);
   }
 
   async removeItem(id: string): Promise<{ message: string; status: number }> {
-    if (!id)
-      throw new BadRequestException({ message: 'Invalid ID', status: 400 });
+    if (!id) throw new BadRequestException();
 
     const item = await this.productRepository.findOneBy({ id });
-    if (!item)
-      throw new NotFoundException({ message: 'Item not found', status: 404 });
+    if (!item) throw new NotFoundException();
 
     await this.productRepository.softDelete({ id });
 
-    return { message: 'Item deleted successfully', status: 200 };
+    return { message: 'Ok', status: 200 };
   }
 
   async getItemById(id: string): Promise<Item> {
-    if (!id)
-      throw new BadRequestException({ message: 'Invalid ID', status: 400 });
+    if (!id) throw new BadRequestException();
 
     const item = await this.productRepository.findOneBy({ id });
-    if (!item)
-      throw new NotFoundException({ message: 'Item not found', status: 404 });
+    if (!item) throw new NotFoundException();
 
-    return item;
+    const location = await this.locationsService.getLocationById(item.location);
+
+    if (!location) throw new NotFoundException();
+    const modifiedItem = { ...item, location: location.name };
+
+    return modifiedItem;
   }
 }
