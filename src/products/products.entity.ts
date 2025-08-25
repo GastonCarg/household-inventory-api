@@ -1,8 +1,13 @@
+import { Location } from 'src/locations/locations.entity';
 import {
   Column,
+  CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -16,8 +21,9 @@ export class Item {
   @Column({ nullable: true })
   description?: string;
 
-  @Column()
-  location: string;
+  @ManyToOne(() => Location, (location) => location.products)
+  @JoinColumn({ name: 'location' })
+  location: Location;
 
   @Column()
   expireDate: string;
@@ -27,4 +33,10 @@ export class Item {
 
   @DeleteDateColumn({ nullable: true })
   deletedAt?: Date;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }
