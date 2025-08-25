@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { AddItemDto } from './products.dto';
 import { Item } from './products.entity';
@@ -18,13 +10,18 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  getItems() {
-    return this.productsService.getItems();
+  getItems(@Query('page') page: number, @Query('limit') limit: number) {
+    return this.productsService.getItems(page, limit);
   }
 
   @Post()
   addItem(@Body() addItemBody: AddItemDto): Promise<Item> {
     return this.productsService.addItem(addItemBody);
+  }
+
+  @Get('/summary')
+  getExpirationSummary() {
+    return this.productsService.getExpirationSummary();
   }
 
   @Delete('/:id')

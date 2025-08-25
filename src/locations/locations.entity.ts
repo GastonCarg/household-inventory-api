@@ -1,38 +1,27 @@
-import { Location } from 'src/locations/locations.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Item } from '../products/products.entity';
 
 @Entity()
-export class Item {
+export class Location {
   @PrimaryGeneratedColumn()
   id: string;
 
   @Column()
-  title: string;
-
-  @Column({ nullable: true })
-  description?: string;
-
-  @ManyToOne(() => Location, (location) => location.products)
-  @JoinColumn({ name: 'location' })
-  location: Location;
-
-  @Column()
-  expireDate: string;
-
-  @Column()
-  quantity: number;
+  name: string;
 
   @DeleteDateColumn({ nullable: true })
   deletedAt?: Date;
+
+  @OneToMany(() => Item, (product) => product.location)
+  products: Item[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
