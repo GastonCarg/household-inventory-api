@@ -19,7 +19,7 @@ export class AddItemDto {
   quantity: number;
 }
 
-export class IremResponseDto {
+export class ItemResponseDto {
   @IsString()
   id: string;
 
