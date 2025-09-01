@@ -8,7 +8,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
 
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: 'https://household-inventory-hj6d5hkxe-gastoncargs-projects.vercel.app',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   });
 
