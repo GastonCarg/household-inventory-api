@@ -1,4 +1,3 @@
-import { Location } from 'src/locations/locations.entity';
 import {
   Column,
   CreateDateColumn,
@@ -9,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Location } from '../locations/locations.entity';
 
 @Entity()
 export class Item {

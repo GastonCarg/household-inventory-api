@@ -5,8 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LocationsService } from 'src/locations/locations.service';
 import { Repository } from 'typeorm';
+import { LocationsService } from '../locations/locations.service';
 import { AddItemDto, ResponseProductsDto } from './products.dto';
 import { Item } from './products.entity';
 
