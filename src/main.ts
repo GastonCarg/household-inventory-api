@@ -8,7 +8,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
 
   app.enableCors({
-    origin: 'household-inventory-seven.vercel.app',
+    origin: 'https://household-inventory-seven.vercel.app',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   });
 
