@@ -40,6 +40,28 @@ export class ItemResponseDto {
   quantity: number;
 }
 
+export class UpdateItemDto {
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @IsOptional()
+  @IsDateString()
+  expireDate?: string;
+
+  @IsOptional()
+  @IsNumber()
+  quantity?: number;
+}
+
 export class ResponseProductsDto {
   @IsNumber()
   page: number;

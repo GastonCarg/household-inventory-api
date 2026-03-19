@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LocationsService } from '../locations/locations.service';
-import { AddItemDto, ResponseProductsDto } from './products.dto';
+import { AddItemDto, ResponseProductsDto, UpdateItemDto } from './products.dto';
 import { Item } from './products.entity';
 
 @Injectable()
@@ -45,6 +45,24 @@ export class ProductsService {
 
     if (!response) throw new InternalServerErrorException();
     return this.productRepository.save(response);
+  }
+
+  async updateItem(id: string, updateItemBody: UpdateItemDto): Promise<Item> {
+    if (!id) throw new BadRequestException();
+
+    const item = await this.productRepository.findOne({
+      where: { id },
+      relations: ['location'],
+    });
+    if (!item) throw new NotFoundException();
+
+    const { location, ...rest } = updateItemBody;
+    const updatedItem = this.productRepository.merge(item, {
+      ...rest,
+      ...(location ? { location: { id: location } } : {}),
+    });
+
+    return this.productRepository.save(updatedItem);
   }
 
   async removeItem(id: string): Promise<{ message: string; status: number }> {

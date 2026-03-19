@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import { AddItemDto } from './products.dto';
+import { AddItemDto, UpdateItemDto } from './products.dto';
 import { Item } from './products.entity';
 import { ProductsService } from './products.service';
 
@@ -22,6 +22,11 @@ export class ProductsController {
   @Get('/summary')
   getExpirationSummary() {
     return this.productsService.getExpirationSummary();
+  }
+
+  @Put('/:id')
+  updateItem(@Param('id') id: string, @Body() updateItemBody: UpdateItemDto): Promise<Item> {
+    return this.productsService.updateItem(id, updateItemBody);
   }
 
   @Delete('/:id')
