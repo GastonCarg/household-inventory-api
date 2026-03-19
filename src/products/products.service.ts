@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LocationsService } from '../locations/locations.service';
-import { AddItemDto, ResponseProductsDto } from './products.dto';
+import { AddItemDto, ResponseProductsDto, UpdateItemDto } from './products.dto';
 import { Item } from './products.entity';
 
 @Injectable()
@@ -67,6 +67,20 @@ export class ProductsService {
     });
     if (!item) throw new NotFoundException();
     return item;
+  }
+
+  async updateItem(id: string, updateItemBody: UpdateItemDto): Promise<Item> {
+    if (!id) throw new BadRequestException();
+
+    const item = await this.productRepository.findOneBy({ id });
+    if (!item) throw new NotFoundException();
+
+    const updated = this.productRepository.merge(item, {
+      ...updateItemBody,
+      location: { id: updateItemBody.location },
+    });
+
+    return this.productRepository.save(updated);
   }
 
   async getExpirationSummary(): Promise<{ expiringSoon: number; expired: number; total: number }> {
