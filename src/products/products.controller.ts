@@ -1,6 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import { AddItemDto } from './products.dto';
+import { AddItemDto, UpdateItemDto } from './products.dto';
 import { Item } from './products.entity';
 import { ProductsService } from './products.service';
 
@@ -27,6 +37,11 @@ export class ProductsController {
   @Delete('/:id')
   removeItem(@Param('id') id: string) {
     return this.productsService.removeItem(id);
+  }
+
+  @Patch('/:id')
+  updateItem(@Param('id') id: string, @Body() updateItemBody: UpdateItemDto) {
+    return this.productsService.updateItem(id, updateItemBody);
   }
 
   @Get('/:id')
