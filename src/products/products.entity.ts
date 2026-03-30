@@ -18,9 +18,6 @@ export class Item {
   @Column()
   title: string;
 
-  @Column({ nullable: true })
-  description?: string;
-
   @ManyToOne(() => Location, (location) => location.products)
   @JoinColumn({ name: 'location' })
   location: Location;

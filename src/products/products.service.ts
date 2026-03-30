@@ -41,7 +41,10 @@ export class ProductsService {
 
     if (!title || !expireDate || !quantity || !location) throw new BadRequestException();
 
-    const response = this.productRepository.create({ ...addItemBody, location: { id: location } });
+    const response = this.productRepository.create({
+      ...addItemBody,
+      location: { id: location.id },
+    });
 
     if (!response) throw new InternalServerErrorException();
     return this.productRepository.save(response);
@@ -77,7 +80,7 @@ export class ProductsService {
 
     const updated = this.productRepository.merge(item, {
       ...updateItemBody,
-      location: { id: updateItemBody.location },
+      ...(updateItemBody.location && { location: { id: updateItemBody.location.id } }),
     });
 
     return this.productRepository.save(updated);
