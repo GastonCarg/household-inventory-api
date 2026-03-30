@@ -14,13 +14,8 @@ export const TypeOrmAsyncModule = NestTypeOrmModule.forRootAsync({
     password: config.get<string>('DB_PASSWORD')!,
     database: config.get<string>('DB_DATABASE')!,
     autoLoadEntities: true,
-    synchronize: IS_PRODUCTION ? false : true,
-    ssl: true,
-    extra: {
-      ssl: {
-        rejectUnauthorized: false,
-      },
-    },
+    synchronize: false,
+    ssl: IS_PRODUCTION ? true : false,
   }),
 });
 
