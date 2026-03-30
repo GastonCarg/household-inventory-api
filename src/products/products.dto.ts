@@ -1,33 +1,42 @@
-import { IsDateString, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsDateString, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Item } from './products.entity';
 
+export class LocationRefDto {
+  @Transform(({ value }: { value: unknown }) => String(value))
+  @IsString()
+  id: string;
+
+  @IsString()
+  name: string;
+}
+
 export class UpdateItemDto {
+  @IsOptional()
   @IsString()
-  title: string;
+  title?: string;
 
-  @IsString()
-  description: string;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => LocationRefDto)
+  location?: LocationRefDto;
 
-  @IsString()
-  location: string;
-
+  @IsOptional()
   @IsDateString()
-  expireDate: string;
+  expireDate?: string;
 
+  @IsOptional()
   @IsNumber()
-  quantity: number;
+  quantity?: number;
 }
 
 export class AddItemDto {
   @IsString()
   title: string;
 
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsString()
-  location: string;
+  @ValidateNested()
+  @Type(() => LocationRefDto)
+  location: LocationRefDto;
 
   @IsDateString()
   expireDate: string;
@@ -43,12 +52,7 @@ export class ItemResponseDto {
   @IsString()
   title: string;
 
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsString()
-  location: string;
+  location: LocationRefDto;
 
   @IsDateString()
   expireDate: string;
