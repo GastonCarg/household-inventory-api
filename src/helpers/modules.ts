@@ -1,7 +1,6 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule as ThrottlerModuleConfig } from '@nestjs/throttler';
 import { TypeOrmModule as NestTypeOrmModule } from '@nestjs/typeorm';
-import { IS_PRODUCTION } from './constant';
 
 export const TypeOrmAsyncModule = NestTypeOrmModule.forRootAsync({
   imports: [ConfigModule],
@@ -15,7 +14,8 @@ export const TypeOrmAsyncModule = NestTypeOrmModule.forRootAsync({
     database: config.get<string>('DB_DATABASE')!,
     autoLoadEntities: true,
     synchronize: false,
-    ssl: IS_PRODUCTION ? true : false,
+    ssl: config.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
+    extra: config.get('NODE_ENV') === 'production' ? { ssl: { rejectUnauthorized: false } } : {},
   }),
 });
 
