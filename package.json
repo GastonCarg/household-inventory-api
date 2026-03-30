@@ -1,8 +1,8 @@
 {
   "name": "household-inventory-api",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "version": "0.1.0",
+  "description": "API for household inventory management",
+  "author": "Gaston Cargnelutti",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
