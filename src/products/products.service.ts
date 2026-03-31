@@ -104,7 +104,7 @@ export class ProductsService {
       .createQueryBuilder('item')
       .select([
         `SUM(CASE WHEN item.expireDate < :today THEN 1 ELSE 0 END) AS expired`,
-        `SUM(CASE WHEN item.expireDate <= :threeDaysLater THEN 1 ELSE 0 END) AS expiringSoon`,
+        `SUM(CASE WHEN item.expireDate >= :today AND item.expireDate <= :threeDaysLater THEN 1 ELSE 0 END) AS expiringSoon`,
         `COUNT(*) as total`,
       ])
       .setParameters({ today, threeDaysLater })
