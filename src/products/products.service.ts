@@ -2,20 +2,27 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { CatalogService } from '../catalog/catalog.service';
 import { LocationsService } from '../locations/locations.service';
 import { AddItemDto, ResponseProductsDto, UpdateItemDto } from './products.dto';
 import { Item } from './products.entity';
 
 @Injectable()
 export class ProductsService {
+  private readonly logger = new Logger(ProductsService.name);
+
   constructor(
     @InjectRepository(Item)
     private productRepository: Repository<Item>,
     private readonly locationsService: LocationsService,
+    private readonly catalogService: CatalogService,
+    @InjectDataSource()
+    private dataSource: DataSource,
   ) {}
 
   async getItems(page: number = 1, limit: number = 10): Promise<ResponseProductsDto> {
@@ -47,7 +54,33 @@ export class ProductsService {
     });
 
     if (!response) throw new InternalServerErrorException();
-    return this.productRepository.save(response);
+    const saved = await this.productRepository.save(response);
+    await this.recordCatalogUsage([addItemBody]);
+    return saved;
+  }
+
+  async addItems(items: AddItemDto[]): Promise<Item[]> {
+    if (!items?.length) throw new BadRequestException();
+
+    const saved = await this.dataSource.transaction((manager) => {
+      const repository = manager.getRepository(Item);
+      const entities = items.map((item) =>
+        repository.create({ ...item, location: { id: item.location.id } }),
+      );
+      return repository.save(entities);
+    });
+
+    await this.recordCatalogUsage(items);
+    return saved;
+  }
+
+  // The catalog only powers suggestions, so a failure here must not fail the request
+  private async recordCatalogUsage(items: AddItemDto[]): Promise<void> {
+    try {
+      await this.catalogService.recordUsage(items);
+    } catch (error) {
+      this.logger.warn(`Could not update product catalog: ${String(error)}`);
+    }
   }
 
   async removeItem(id: string): Promise<{ message: string; status: number }> {

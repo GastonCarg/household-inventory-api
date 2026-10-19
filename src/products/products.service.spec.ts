@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
+import { getDataSourceToken, getRepositoryToken } from '@nestjs/typeorm';
 import { ProductsService } from './products.service';
 import { Item } from './products.entity';
 import { LocationsService } from '../locations/locations.service';
+import { CatalogService } from '../catalog/catalog.service';
 
 describe('ProductsService', () => {
   let service: ProductsService;
@@ -19,6 +20,21 @@ describe('ProductsService', () => {
 
   const mockLocationsService = {};
 
+  const mockCatalogService = {
+    recordUsage: jest.fn(),
+  };
+
+  const mockTransactionRepository = {
+    create: jest.fn((item: object) => item),
+    save: jest.fn((items: object[]) => Promise.resolve(items)),
+  };
+
+  const mockDataSource = {
+    transaction: jest.fn((work: (manager: unknown) => unknown) =>
+      work({ getRepository: () => mockTransactionRepository }),
+    ),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
     mockItemRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
@@ -28,6 +44,8 @@ describe('ProductsService', () => {
         ProductsService,
         { provide: getRepositoryToken(Item), useValue: mockItemRepository },
         { provide: LocationsService, useValue: mockLocationsService },
+        { provide: CatalogService, useValue: mockCatalogService },
+        { provide: getDataSourceToken(), useValue: mockDataSource },
       ],
     }).compile();
 
@@ -36,6 +54,49 @@ describe('ProductsService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('addItems', () => {
+    const items = [
+      {
+        title: 'Leche',
+        barcode: '7790080000000',
+        expireDate: '2030-01-10T00:00:00.000Z',
+        quantity: 2,
+        location: { id: '1', name: 'Heladera' },
+      },
+      {
+        title: 'Carne picada',
+        expireDate: '2030-01-03T00:00:00.000Z',
+        quantity: 1,
+        location: { id: '2', name: 'Freezer' },
+      },
+    ];
+
+    it('should save all items in a single transaction', async () => {
+      const result = await service.addItems(items);
+
+      expect(mockDataSource.transaction).toHaveBeenCalledTimes(1);
+      expect(mockTransactionRepository.save).toHaveBeenCalledTimes(1);
+      expect(result).toHaveLength(2);
+      expect(result[0]).toMatchObject({ title: 'Leche', location: { id: '1' } });
+    });
+
+    it('should record the items in the catalog', async () => {
+      await service.addItems(items);
+
+      expect(mockCatalogService.recordUsage).toHaveBeenCalledWith(items);
+    });
+
+    it('should not fail when the catalog update fails', async () => {
+      mockCatalogService.recordUsage.mockRejectedValueOnce(new Error('db down'));
+
+      await expect(service.addItems(items)).resolves.toHaveLength(2);
+    });
+
+    it('should reject an empty list', async () => {
+      await expect(service.addItems([])).rejects.toThrow();
+    });
   });
 
   describe('getExpirationSummary', () => {

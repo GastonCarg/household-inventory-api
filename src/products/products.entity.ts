@@ -28,6 +28,9 @@ export class Item {
   @Column()
   quantity: number;
 
+  @Column({ type: 'varchar', nullable: true })
+  barcode?: string | null;
+
   @DeleteDateColumn({ nullable: true })
   deletedAt?: Date;
 
