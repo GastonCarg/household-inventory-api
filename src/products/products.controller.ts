@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import { AddItemDto, UpdateItemDto } from './products.dto';
+import { AddItemDto, AddItemsBulkDto, UpdateItemDto } from './products.dto';
 import { Item } from './products.entity';
 import { ProductsService } from './products.service';
 
@@ -27,6 +27,11 @@ export class ProductsController {
   @Post()
   addItem(@Body() addItemBody: AddItemDto): Promise<Item> {
     return this.productsService.addItem(addItemBody);
+  }
+
+  @Post('/bulk')
+  addItems(@Body() body: AddItemsBulkDto): Promise<Item[]> {
+    return this.productsService.addItems(body.items);
   }
 
   @Get('/summary')

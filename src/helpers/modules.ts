@@ -13,8 +13,8 @@ export const TypeOrmAsyncModule = NestTypeOrmModule.forRootAsync({
     password: config.get<string>('DB_PASSWORD')!,
     database: config.get<string>('DB_DATABASE')!,
     autoLoadEntities: true,
-    // synchronize: false,
-    // dropSchema: false,
+    // Enable only to let TypeORM create/alter tables from the entities (no migrations in this project)
+    synchronize: config.get<string>('DB_SYNCHRONIZE') === 'true',
     ssl: config.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
     extra: config.get('NODE_ENV') === 'production' ? { ssl: { rejectUnauthorized: false } } : {},
   }),

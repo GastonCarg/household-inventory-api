@@ -1,5 +1,15 @@
 import { Transform, Type } from 'class-transformer';
-import { IsDateString, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Matches,
+  ValidateNested,
+} from 'class-validator';
 import { Item } from './products.entity';
 
 export class LocationRefDto {
@@ -43,6 +53,19 @@ export class AddItemDto {
 
   @IsNumber()
   quantity: number;
+
+  @IsOptional()
+  @Matches(/^\d{6,14}$/)
+  barcode?: string;
+}
+
+export class AddItemsBulkDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(100)
+  @ValidateNested({ each: true })
+  @Type(() => AddItemDto)
+  items: AddItemDto[];
 }
 
 export class ItemResponseDto {
