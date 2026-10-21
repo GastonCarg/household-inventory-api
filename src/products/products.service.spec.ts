@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getDataSourceToken, getRepositoryToken } from '@nestjs/typeorm';
 import { ProductsService } from './products.service';
@@ -115,6 +116,25 @@ describe('ProductsService', () => {
     it('should reject an empty list', async () => {
       await expect(service.addItems([])).rejects.toThrow();
     });
+
+    it('should accept fractional quantities for weights and volumes', async () => {
+      const weighed = [{ ...items[1], quantity: 1.5, unit: 'kg' as const }];
+
+      await expect(service.addItems(weighed)).resolves.toHaveLength(1);
+    });
+
+    it('should reject fractional quantities for items counted in units', async () => {
+      const counted = [{ ...items[0], quantity: 1.5, unit: 'unit' as const }];
+
+      await expect(service.addItems(counted)).rejects.toThrow(BadRequestException);
+      expect(mockDataSource.transaction).not.toHaveBeenCalled();
+    });
+
+    it('should treat items without a unit as counted in units', async () => {
+      const counted = [{ ...items[0], quantity: 0.5 }];
+
+      await expect(service.addItems(counted)).rejects.toThrow(BadRequestException);
+    });
   });
 
   describe('getExpirationSummary', () => {
@@ -156,9 +176,7 @@ describe('ProductsService', () => {
       await service.getExpirationSummary();
 
       const selectCall = mockQueryBuilder.select.mock.calls[0][0] as string[];
-      const expiringSoonCondition = selectCall.find((s) =>
-        s.includes('expiringSoon'),
-      );
+      const expiringSoonCondition = selectCall.find((s) => s.includes('expiringSoon'));
 
       expect(expiringSoonCondition).toContain(':today');
       expect(expiringSoonCondition).toContain(':threeDaysLater');

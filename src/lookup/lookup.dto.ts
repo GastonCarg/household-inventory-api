@@ -1,4 +1,5 @@
 import { IsBase64, IsIn, IsString, MaxLength } from 'class-validator';
+import { Unit } from '../products/units';
 
 export class ImageLookupDto {
   // ~4MB of base64; the front sends a resized ~768px JPEG, usually well under 300KB
@@ -24,6 +25,7 @@ export interface BarcodeLookupResponse {
   imageUrl: string | null;
   suggestedLocation: SuggestedLocation | null;
   suggestedShelfLifeDays: number | null;
+  suggestedUnit: Unit;
 }
 
 export interface ImageLookupResponse {
@@ -31,5 +33,6 @@ export interface ImageLookupResponse {
   category: string | null;
   suggestedLocation: SuggestedLocation | null;
   suggestedShelfLifeDays: number | null;
+  suggestedUnit: Unit;
   confidence: number;
 }

@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Location } from '../locations/locations.entity';
+import { Unit } from '../products/units';
 
 @Entity('product_catalog')
 export class ProductCatalog {
@@ -38,6 +39,9 @@ export class ProductCatalog {
 
   @Column({ name: 'shelf_life_days', type: 'int', nullable: true })
   shelfLifeDays: number | null;
+
+  @Column({ name: 'default_unit', type: 'varchar', length: 8, nullable: true })
+  defaultUnit: Unit | null;
 
   @Column({ name: 'times_used', type: 'int', default: 0 })
   timesUsed: number;
