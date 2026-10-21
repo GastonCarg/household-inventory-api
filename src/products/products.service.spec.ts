@@ -16,6 +16,7 @@ describe('ProductsService', () => {
 
   const mockItemRepository = {
     createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+    findAndCount: jest.fn(),
   };
 
   const mockLocationsService = {};
@@ -54,6 +55,23 @@ describe('ProductsService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('getItems', () => {
+    it('returns the page sorted by expiration date, soonest first', async () => {
+      const items = [{ id: 1 }, { id: 2 }];
+      mockItemRepository.findAndCount.mockResolvedValue([items, 25]);
+
+      const result = await service.getItems(2, 12);
+
+      expect(mockItemRepository.findAndCount).toHaveBeenCalledWith({
+        take: 12,
+        skip: 12,
+        relations: ['location'],
+        order: { expireDate: 'ASC', id: 'ASC' },
+      });
+      expect(result).toEqual({ data: items, total: 25, page: 2, lastPage: 3, next: 3 });
+    });
   });
 
   describe('addItems', () => {
