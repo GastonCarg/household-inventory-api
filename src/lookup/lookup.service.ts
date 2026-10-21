@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CatalogService } from '../catalog/catalog.service';
 import { Location } from '../locations/locations.entity';
+import { DEFAULT_UNIT, isUnit, UNITS } from '../products/units';
 import { BarcodeLookupResponse, ImageLookupDto, ImageLookupResponse } from './lookup.dto';
 import { estimateShelfLifeDays } from './shelf-life';
 
@@ -40,6 +41,7 @@ interface GeminiProduct {
   category?: string;
   suggestedShelfLifeDays?: number;
   suggestedLocationName?: string;
+  suggestedUnit?: string;
   confidence?: number;
 }
 
@@ -69,6 +71,7 @@ export class LookupService {
           ? { id: String(cached.defaultLocation.id), name: cached.defaultLocation.name }
           : null,
         suggestedShelfLifeDays: cached.shelfLifeDays,
+        suggestedUnit: cached.defaultUnit ?? DEFAULT_UNIT,
       };
     }
 
@@ -84,6 +87,7 @@ export class LookupService {
         imageUrl: null,
         suggestedLocation: null,
         suggestedShelfLifeDays: null,
+        suggestedUnit: DEFAULT_UNIT,
       };
     }
 
@@ -106,6 +110,8 @@ export class LookupService {
       imageUrl,
       suggestedLocation: null,
       suggestedShelfLifeDays: estimateShelfLifeDays(product.categories_tags),
+      // Packaged product: counted in units, its size is already part of the title
+      suggestedUnit: DEFAULT_UNIT,
     };
   }
 
@@ -133,6 +139,7 @@ export class LookupService {
         ? `Sugerí la ubicación más adecuada entre: ${locations.map((l) => l.name).join(', ')}.`
         : '',
       'Estimá cuántos días dura en esa ubicación y tu confianza entre 0 y 1.',
+      `Sugerí la unidad de medida (${UNITS.join(', ')}): productos envasados en "unit"; frescos o a granel (carne, verdura, queso) por peso ("g" o "kg") o volumen ("ml" o "l").`,
     ]
       .filter(Boolean)
       .join('\n');
@@ -161,6 +168,7 @@ export class LookupService {
                 category: { type: 'STRING' },
                 suggestedShelfLifeDays: { type: 'INTEGER' },
                 suggestedLocationName: { type: 'STRING' },
+                suggestedUnit: { type: 'STRING', enum: [...UNITS] },
                 confidence: { type: 'NUMBER' },
               },
               required: ['title', 'confidence'],
@@ -201,6 +209,7 @@ export class LookupService {
       category: product.category ?? null,
       suggestedLocation: location ? { id: String(location.id), name: location.name } : null,
       suggestedShelfLifeDays: shelfLife > 0 ? Math.round(shelfLife) : null,
+      suggestedUnit: isUnit(product.suggestedUnit) ? product.suggestedUnit : DEFAULT_UNIT,
       confidence: Math.min(Math.max(Number(product.confidence) || 0, 0), 1),
     };
   }

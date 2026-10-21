@@ -11,6 +11,16 @@ import { CatalogService } from '../catalog/catalog.service';
 import { LocationsService } from '../locations/locations.service';
 import { AddItemDto, ResponseProductsDto, UpdateItemDto } from './products.dto';
 import { Item } from './products.entity';
+import { DEFAULT_UNIT, isValidQuantity } from './units';
+
+const assertValidQuantity = ({
+  quantity,
+  unit = DEFAULT_UNIT,
+}: Pick<Item, 'quantity'> & Partial<Pick<Item, 'unit'>>) => {
+  if (!isValidQuantity(quantity, unit)) {
+    throw new BadRequestException('Items counted in units need a whole quantity');
+  }
+};
 
 @Injectable()
 export class ProductsService {
@@ -49,6 +59,7 @@ export class ProductsService {
     const { title, expireDate, quantity, location } = addItemBody;
 
     if (!title || !expireDate || !quantity || !location) throw new BadRequestException();
+    assertValidQuantity(addItemBody);
 
     const response = this.productRepository.create({
       ...addItemBody,
@@ -63,6 +74,7 @@ export class ProductsService {
 
   async addItems(items: AddItemDto[]): Promise<Item[]> {
     if (!items?.length) throw new BadRequestException();
+    items.forEach(assertValidQuantity);
 
     const saved = await this.dataSource.transaction((manager) => {
       const repository = manager.getRepository(Item);
@@ -117,6 +129,8 @@ export class ProductsService {
       ...updateItemBody,
       ...(updateItemBody.location && { location: { id: updateItemBody.location.id } }),
     });
+    // Checked after merging: a partial update may change only the quantity or only the unit
+    assertValidQuantity(updated);
 
     return this.productRepository.save(updated);
   }

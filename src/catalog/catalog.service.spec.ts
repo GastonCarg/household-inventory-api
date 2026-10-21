@@ -47,6 +47,7 @@ describe('CatalogService', () => {
           barcode: '7790080000000',
           defaultLocation: { id: '1' },
           shelfLifeDays: 10,
+          defaultUnit: 'unit',
           timesUsed: 1,
         }),
       );
@@ -60,11 +61,16 @@ describe('CatalogService', () => {
       });
 
       await service.recordUsage([
-        { title: 'Carne picada', expireDate: inTenDays, location: { id: '2' } },
+        { title: 'Carne picada', expireDate: inTenDays, location: { id: '2' }, unit: 'kg' },
       ]);
 
       expect(mockCatalogRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({ timesUsed: 5, shelfLifeDays: 10, defaultLocation: { id: '2' } }),
+        expect.objectContaining({
+          timesUsed: 5,
+          shelfLifeDays: 10,
+          defaultLocation: { id: '2' },
+          defaultUnit: 'kg',
+        }),
       );
     });
 

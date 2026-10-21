@@ -59,6 +59,7 @@ describe('LookupService', () => {
         imageUrl: null,
         defaultLocation: { id: 1, name: 'Heladera' },
         shelfLifeDays: 8,
+        defaultUnit: 'l',
       });
 
       const result = await service.lookupBarcode('7790742000000');
@@ -69,6 +70,7 @@ describe('LookupService', () => {
         title: 'Leche entera 1L',
         suggestedLocation: { id: '1', name: 'Heladera' },
         suggestedShelfLifeDays: 8,
+        suggestedUnit: 'l',
       });
     });
 
@@ -93,6 +95,7 @@ describe('LookupService', () => {
         title: 'Yogur bebible 1 L',
         brand: 'Ilolay',
         suggestedShelfLifeDays: 20,
+        suggestedUnit: 'unit',
       });
       expect(mockCatalogService.cacheExternal).toHaveBeenCalledWith(
         expect.objectContaining({ barcode: '7790742000000', title: 'Yogur bebible 1 L' }),
@@ -145,6 +148,7 @@ describe('LookupService', () => {
                       category: 'carne',
                       suggestedShelfLifeDays: 90,
                       suggestedLocationName: 'freezer',
+                      suggestedUnit: 'kg',
                       confidence: 0.9,
                     }),
                   },
@@ -162,11 +166,41 @@ describe('LookupService', () => {
         category: 'carne',
         suggestedLocation: { id: '2', name: 'Freezer' },
         suggestedShelfLifeDays: 90,
+        suggestedUnit: 'kg',
         confidence: 0.9,
       });
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       expect(url).toContain('gemini-2.5-flash:generateContent');
       expect(String(init.body)).toContain('Carne picada');
+    });
+
+    it('should fall back to units when Gemini suggests an unknown unit', async () => {
+      env.GEMINI_API_KEY = 'key';
+      mockLocationRepository.find.mockResolvedValue([]);
+      mockCatalogService.getFrequent.mockResolvedValue([]);
+      fetchMock.mockResolvedValue(
+        jsonResponse({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify({
+                      title: 'Pan',
+                      suggestedUnit: 'docena',
+                      confidence: 0.8,
+                    }),
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+      );
+
+      const result = await service.lookupImage(body);
+
+      expect(result.suggestedUnit).toBe('unit');
     });
 
     it('should fail with 503 when the free tier quota is exceeded', async () => {

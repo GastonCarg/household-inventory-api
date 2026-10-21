@@ -1,18 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, MoreThan, Repository } from 'typeorm';
+import { DEFAULT_UNIT, Unit } from '../products/units';
 import { ProductCatalog } from './catalog.entity';
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
 export const normalizeTitle = (title: string): string =>
-  title.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
+  title
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
 
 export interface CatalogUsage {
   title: string;
   barcode?: string | null;
   expireDate: string;
   location: { id: string };
+  unit?: Unit;
 }
 
 export interface ExternalProduct {
@@ -56,7 +63,7 @@ export class CatalogService {
   async recordUsage(usages: CatalogUsage[]): Promise<void> {
     const now = new Date();
 
-    for (const { title, barcode, expireDate, location } of usages) {
+    for (const { title, barcode, expireDate, location, unit } of usages) {
       const normalizedTitle = normalizeTitle(title);
       const entry =
         (await this.catalogRepository.findOneBy(
@@ -74,6 +81,7 @@ export class CatalogService {
         normalizedTitle,
         defaultLocation: { id: location.id },
         ...(shelfLifeDays > 0 && { shelfLifeDays }),
+        defaultUnit: unit ?? DEFAULT_UNIT,
         timesUsed: entry.timesUsed + 1,
         lastUsedAt: now,
       });

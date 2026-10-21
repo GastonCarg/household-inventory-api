@@ -4,13 +4,16 @@ import {
   ArrayMinSize,
   IsArray,
   IsDateString,
+  IsIn,
   IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
   Matches,
   ValidateNested,
 } from 'class-validator';
 import { Item } from './products.entity';
+import { Unit, UNITS } from './units';
 
 export class LocationRefDto {
   @Transform(({ value }: { value: unknown }) => String(value))
@@ -37,7 +40,12 @@ export class UpdateItemDto {
 
   @IsOptional()
   @IsNumber()
+  @IsPositive()
   quantity?: number;
+
+  @IsOptional()
+  @IsIn(UNITS)
+  unit?: Unit;
 }
 
 export class AddItemDto {
@@ -52,7 +60,12 @@ export class AddItemDto {
   expireDate: string;
 
   @IsNumber()
+  @IsPositive()
   quantity: number;
+
+  @IsOptional()
+  @IsIn(UNITS)
+  unit?: Unit;
 
   @IsOptional()
   @Matches(/^\d{6,14}$/)
@@ -82,6 +95,9 @@ export class ItemResponseDto {
 
   @IsNumber()
   quantity: number;
+
+  @IsIn(UNITS)
+  unit: Unit;
 }
 
 export class ResponseProductsDto {
