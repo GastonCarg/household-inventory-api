@@ -30,6 +30,8 @@ export class ProductsService {
       take: limit,
       skip: (page - 1) * limit,
       relations: ['location'],
+      // Soonest to expire first; id breaks ties so pages don't overlap or skip items
+      order: { expireDate: 'ASC', id: 'ASC' },
     });
 
     if (!products) throw new NotFoundException();
